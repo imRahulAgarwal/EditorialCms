@@ -16,7 +16,10 @@ export const GET = async (req: NextRequest) => {
 		}
 
 		const userDataToReturn = { name: user.fullName, email: user.email, role: user.role };
-		return NextResponse.json({ success: true, user: userDataToReturn }, { status: 200 });
+		return NextResponse.json(
+			{ success: true, user: userDataToReturn, requiresPasswordChange: user.requiresPasswordChange ?? false },
+			{ status: 200 }
+		);
 	} catch (error) {
 		console.error(error);
 		const errorMessage = error instanceof Error ? error.message : "Internal issue.";

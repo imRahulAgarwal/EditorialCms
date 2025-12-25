@@ -21,7 +21,7 @@ export const GET = async (req: NextRequest, { params }: TRoute) => {
 	}
 };
 
-export const PUT = async (req: Request, { params }: TRoute) => {
+export const PUT = async (req: NextRequest, { params }: TRoute) => {
 	try {
 		const { id } = await params;
 		await connectDatabase();

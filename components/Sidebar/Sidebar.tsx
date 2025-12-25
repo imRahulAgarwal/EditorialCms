@@ -26,10 +26,15 @@ export default function Sidebar({ sidebarOpen, closeSidebar }: { sidebarOpen: bo
 
 	return (
 		<>
+			{sidebarOpen && (
+				<div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={closeSidebar} aria-hidden="true" />
+			)}
+
 			<nav
 				className={clsx(
-					"w-64 h-full bg-white border-r border-slate-200 transition-all duration-300",
-					sidebarOpen ? "ml-0" : "-ml-64"
+					"fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 transition-transform duration-300",
+					"md:static md:translate-x-0",
+					sidebarOpen ? "translate-x-0" : "-translate-x-full"
 				)}
 				aria-label="Sidebar navigation">
 				{/* Header */}

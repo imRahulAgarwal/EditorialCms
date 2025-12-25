@@ -3,6 +3,7 @@
 import { deletePost, fetchPosts, updatePostStatus } from "@/lib/api/post";
 import { RootState } from "@/store";
 import { flexRender, getCoreRowModel, SortingState, useReactTable } from "@tanstack/react-table";
+import dayjs from "dayjs";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -62,12 +63,24 @@ export default function PostsTable() {
 			{
 				header: "Created At",
 				accessorKey: "createdAt",
-				cell: ({ getValue }) => getValue() || "-",
+				cell: ({ getValue }) => {
+					const createdAt = getValue<Date>();
+					return createdAt ? dayjs(createdAt).format("DD-MMM-YYYY") : "-";
+				},
 			},
 			{
 				header: "Status",
 				accessorKey: "publishStatus",
-				cell: ({ getValue }) => getValue() || "-",
+				cell: ({ getValue }) => {
+					const publishStatus = getValue<string>();
+					if (publishStatus === "published") {
+						return "Published";
+					} else if (publishStatus === "archived") {
+						return "Archived";
+					} else if (publishStatus === "draft") {
+						return "Draft";
+					}
+				},
 			},
 			{
 				header: "Actions",

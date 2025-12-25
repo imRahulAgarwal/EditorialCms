@@ -1,6 +1,7 @@
 "use client";
 
 import { fetchPost } from "@/lib/api/post";
+import dayjs from "dayjs";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -41,7 +42,7 @@ export default function ViewPost() {
 
 			{/* Metadata */}
 			{post.createdAt && (
-				<p className="mt-1 text-sm text-slate-500">{new Date(post.createdAt).toLocaleDateString()}</p>
+				<p className="mt-1 text-sm text-slate-500">{dayjs(post.createdAt).format("DD-MMM-YYYY")}</p>
 			)}
 
 			<hr className="my-6 border-slate-200" />

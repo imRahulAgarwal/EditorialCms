@@ -2,6 +2,7 @@ import connectDatabase from "@/lib/configs/connectDatabase";
 import UserModel from "@/lib/models/user";
 import { comparePassword, hashPassword } from "@/lib/utils/passwordUtil";
 import { verifyToken } from "@/lib/utils/tokenUtil";
+import { UpdateQuery } from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 
 export const POST = async (req: NextRequest) => {
@@ -17,7 +18,8 @@ export const POST = async (req: NextRequest) => {
 		if (newPassword !== confirmPassword) {
 			return NextResponse.json({ success: false, error: "Passwords are not same." }, { status: 400 });
 		}
-		const user = await UserModel.findOne({ _id: id, isDeleted: false, isActive: true });
+
+		const user = await UserModel.findOne({ _id: id, isDeleted: false, isActive: true }).select("+password");
 		if (!user) {
 			return NextResponse.json({ success: false, error: "User details not found." }, { status: 404 });
 		}
@@ -28,11 +30,12 @@ export const POST = async (req: NextRequest) => {
 		}
 
 		const hashedPassword = await hashPassword(newPassword);
-		await UserModel.findOneAndUpdate(
-			{ _id: id, isDeleted: false, isActive: true },
-			{ $set: { password: hashedPassword, passwordChangedAt: new Date() } },
-			{ new: true }
-		);
+		const updateQuery: UpdateQuery<unknown> = { $set: { password: hashedPassword, passwordChangedAt: new Date() } };
+		if (user.requiresPasswordChange) {
+			updateQuery.$unset = { requiresPasswordChange: 1 };
+		}
+
+		await UserModel.findOneAndUpdate({ _id: id, isDeleted: false, isActive: true }, updateQuery, { new: true });
 
 		return NextResponse.json({ success: true, message: "Password changed successfully." }, { status: 200 });
 	} catch (error) {

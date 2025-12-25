@@ -21,22 +21,22 @@ export default function Header({ toggleSidebar }: { toggleSidebar: () => void })
 	}
 
 	return (
-		<header className="p-4 h-16 border-b border-slate-200 bg-white">
+		<header className="px-3 sm:p-4 h-16 border-b border-slate-200 bg-white">
 			<div className="flex h-full items-center justify-between">
 				<button
 					onClick={toggleSidebar}
 					aria-label="Toggle sidebar"
-					className="p-2 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900">
+					className="md:hidden p-2 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900">
 					<Menu className="text-slate-900" />
 				</button>
 
-				<nav className="flex items-center gap-3">
+				<nav className="flex items-center gap-3 ml-auto">
 					<Link
 						href="/profile"
 						className="flex items-center gap-1 text-slate-600 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 rounded px-2 py-1"
 						aria-label="Profile">
 						<UserCircle className="h-5 w-5" />
-						<span className="">{user?.name}</span>
+						<span className="hidden sm:inline">{user?.name}</span>
 					</Link>
 
 					<button

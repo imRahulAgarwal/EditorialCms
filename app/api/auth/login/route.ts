@@ -26,6 +26,7 @@ export const POST = async (req: NextRequest) => {
 				success: true,
 				user: { name: user.fullName, email: user.email, role: user.role },
 				message: "User logged in successfully.",
+				requiresPasswordChange: user.requiresPasswordChange ?? false,
 			},
 			{ status: 200 }
 		);

@@ -77,7 +77,7 @@ export const POST = async (req: NextRequest) => {
 		const randomNo = Math.floor(Math.random() * 9000) + 1000;
 		const username = `${body.fName}.${body.lName}.${randomNo}`;
 
-		await UserModel.create({ ...body, password: hashedPassword, username });
+		await UserModel.create({ ...body, password: hashedPassword, username, requiresPasswordChange: true });
 		return NextResponse.json({ success: true, message: "User details created successfully." }, { status: 201 });
 	} catch (error) {
 		console.error(error);

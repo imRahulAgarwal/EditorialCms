@@ -1,10 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import connectDatabase from "@/lib/configs/connectDatabase";
 import PostModel from "@/lib/models/post";
 import { TRoute } from "@/types/Route";
+import { checkRoleAccess } from "@/lib/middlewares/authMiddleware";
 
-export const PATCH = async (req: Request, { params }: TRoute) => {
+export const PATCH = async (req: NextRequest, { params }: TRoute) => {
 	try {
+		const roleGuard = checkRoleAccess(["super_admin", "admin"])(req);
+		if (roleGuard) return roleGuard;
+
 		const { id } = await params;
 		await connectDatabase();
 		const body = await req.json();

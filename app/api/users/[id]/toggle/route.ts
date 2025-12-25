@@ -17,7 +17,12 @@ export const PATCH = async (req: NextRequest, { params }: TRoute) => {
 			return NextResponse.json({ success: false, error: "User details not found." }, { status: 404 });
 		}
 
-		await UserModel.findOneAndUpdate({ _id: id, isDeleted: false }, { $set: { isActive: false } }, { new: true });
+		await UserModel.findOneAndUpdate(
+			{ _id: id, isDeleted: false },
+			{ $set: { isActive: !user.isActive } },
+			{ new: true }
+		);
+
 		return NextResponse.json(
 			{ success: true, message: "User active status updated successfully." },
 			{ status: 200 }

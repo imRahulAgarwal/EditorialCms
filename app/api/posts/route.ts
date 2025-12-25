@@ -54,7 +54,7 @@ export const GET = async (req: NextRequest) => {
 	}
 };
 
-export const POST = async (req: Request) => {
+export const POST = async (req: NextRequest) => {
 	try {
 		await connectDatabase();
 		const body = await req.json();
