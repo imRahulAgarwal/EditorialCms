@@ -4,6 +4,7 @@ import connectDatabase from "@/lib/configs/connectDatabase";
 import bcrypt from "bcryptjs";
 import { checkRoleAccess } from "@/lib/middlewares/authMiddleware";
 import { TRoute } from "@/types/Route";
+import validateObjectId from "@/lib/schemas/objectId";
 
 export const PATCH = async (req: NextRequest, { params }: TRoute) => {
 	try {
@@ -11,6 +12,10 @@ export const PATCH = async (req: NextRequest, { params }: TRoute) => {
 		if (roleGuard) return roleGuard;
 
 		const { id } = await params;
+		if (!id || !validateObjectId(id)) {
+			return NextResponse.json({ success: false, error: "Invalid ID." }, { status: 400 });
+		}
+
 		await connectDatabase();
 		const user = await UserModel.findOne({ _id: id, isDeleted: false });
 		if (!user) {

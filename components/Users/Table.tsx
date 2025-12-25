@@ -1,12 +1,13 @@
 "use client";
 
-import { deleteUser, fetchUsers, toggleActiveStatusUser } from "@/lib/api/user";
+import { deleteUser, fetchUsers, resetUserPassword, toggleActiveStatusUser } from "@/lib/api/user";
 import { flexRender, getCoreRowModel, SortingState, useReactTable } from "@tanstack/react-table";
 import { useEffect, useState } from "react";
 import UserModal from "@/components/Users/Modal";
 import { RootState } from "@/store";
 import { useSelector } from "react-redux";
 import dayjs from "dayjs";
+import { useDebounce } from "@/hooks/useDebounce";
 
 type User = {
 	_id: string;
@@ -17,7 +18,13 @@ type User = {
 	isActive: boolean;
 };
 
-const ROLES = ["all", "viewer", "editor", "admin", "super_admin"];
+const ROLES = [
+	{ key: "all", title: "All" },
+	{ key: "viewer", title: "Viewer" },
+	{ key: "editor", title: "Editor" },
+	{ key: "admin", title: "Admin" },
+	{ key: "super_admin", title: "Super Admin" },
+];
 
 export default function UsersTable() {
 	const role = useSelector((state: RootState) => state.user.user?.role);
@@ -30,6 +37,8 @@ export default function UsersTable() {
 	});
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [search, setSearch] = useState("");
+	const debouncedSearch = useDebounce(search, 400);
+
 	const [roleFilter, setRoleFilter] = useState("all");
 	const [showFilter, setShowFilter] = useState(false);
 
@@ -40,7 +49,7 @@ export default function UsersTable() {
 		fetchUsers({
 			page: pagination.pageIndex + 1,
 			limit: pagination.pageSize,
-			search,
+			search: debouncedSearch,
 			role: roleFilter !== "all" ? roleFilter : undefined,
 			sort: sorting[0]?.id,
 			order: sorting[0]?.desc === true ? "desc" : "asc",
@@ -50,7 +59,7 @@ export default function UsersTable() {
 				setTotalDocuments(res.filteredDocuments ?? 0);
 			}
 		});
-	}, [pagination, sorting, search, roleFilter]);
+	}, [pagination, sorting, debouncedSearch, roleFilter]);
 
 	const table = useReactTable({
 		data,
@@ -114,15 +123,23 @@ export default function UsersTable() {
 									setUserIdToEdit(row.original._id);
 									setShowModal(true);
 								}}
-								className="rounded-md px-3 py-1 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200">
+								className="rounded-xs px-3 py-1 text-sm bg-slate-200 text-slate-700 hover:bg-slate-300">
 								Update
 							</button>
 						)}
 
 						{role === "super_admin" && (
 							<button
+								onClick={() => resetUserPassword(row.original._id)}
+								className="rounded-xs px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700">
+								Reset Password
+							</button>
+						)}
+
+						{role === "super_admin" && (
+							<button
 								onClick={() => deleteUser(row.original._id)}
-								className="rounded-md px-3 py-1 text-sm bg-red-600 text-white hover:bg-red-700">
+								className="rounded-xs px-3 py-1 text-sm bg-red-600 text-white hover:bg-red-700">
 								Delete
 							</button>
 						)}
@@ -155,23 +172,23 @@ export default function UsersTable() {
 							setSearch(e.target.value);
 						}}
 						placeholder="Search users"
-						className="rounded-md border border-slate-200 px-3 py-2 text-sm"
+						className="rounded-xs border border-slate-200 px-3 py-2 text-sm"
 					/>
 
 					<div className="relative">
 						<button
 							onClick={() => setShowFilter((v) => !v)}
-							className="rounded-md px-3 py-2 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200">
+							className="rounded-xs px-4 py-2 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200">
 							Filter
 						</button>
 
 						{showFilter && (
-							<div className="absolute z-10 mt-2 w-40 rounded-md border border-slate-200 bg-white shadow-sm">
+							<div className="absolute z-10 mt-2 w-40 rounded-xs border border-slate-200 bg-white shadow-sm">
 								{ROLES.map((role) => (
 									<button
-										key={role}
+										key={role.key}
 										onClick={() => {
-											setRoleFilter(role);
+											setRoleFilter(role.key);
 											setPagination({
 												...pagination,
 												pageIndex: 0,
@@ -179,7 +196,7 @@ export default function UsersTable() {
 											setShowFilter(false);
 										}}
 										className="block w-full text-left px-3 py-2 text-sm hover:bg-slate-50">
-										{role}
+										{role.title}
 									</button>
 								))}
 							</div>
@@ -193,7 +210,7 @@ export default function UsersTable() {
 							setUserIdToEdit("");
 							setShowModal(true);
 						}}
-						className="rounded-md px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700">
+						className="rounded-xs px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700">
 						Add New User
 					</button>
 				)}
@@ -253,13 +270,13 @@ export default function UsersTable() {
 									<button
 										onClick={() => table.previousPage()}
 										disabled={!table.getCanPreviousPage()}
-										className="rounded-md px-3 py-1 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-50">
+										className="rounded-xs px-3 py-1 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-50">
 										Prev
 									</button>
 									<button
 										onClick={() => table.nextPage()}
 										disabled={!table.getCanNextPage()}
-										className="rounded-md px-3 py-1 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-50">
+										className="rounded-xs px-3 py-1 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-50">
 										Next
 									</button>
 								</div>

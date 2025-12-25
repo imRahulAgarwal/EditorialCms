@@ -1,5 +1,6 @@
 import connectDatabase from "@/lib/configs/connectDatabase";
 import UserModel from "@/lib/models/user";
+import { changePasswordSchema } from "@/lib/schemas/auth";
 import { comparePassword, hashPassword } from "@/lib/utils/passwordUtil";
 import { verifyToken } from "@/lib/utils/tokenUtil";
 import { UpdateQuery } from "mongoose";
@@ -14,11 +15,13 @@ export const POST = async (req: NextRequest) => {
 		await connectDatabase();
 		const body = await req.json();
 
-		const { currentPassword, newPassword, confirmPassword } = body;
-		if (newPassword !== confirmPassword) {
-			return NextResponse.json({ success: false, error: "Passwords are not same." }, { status: 400 });
+		const validation = changePasswordSchema.validate(body);
+		if (validation.error) {
+			const errors = validation.error.details.map((issue) => issue.message);
+			return NextResponse.json({ success: false, error: errors[0] }, { status: 422 });
 		}
 
+		const { currentPassword, newPassword } = validation.value;
 		const user = await UserModel.findOne({ _id: id, isDeleted: false, isActive: true }).select("+password");
 		if (!user) {
 			return NextResponse.json({ success: false, error: "User details not found." }, { status: 404 });

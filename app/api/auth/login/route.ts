@@ -1,5 +1,6 @@
 import connectDatabase from "@/lib/configs/connectDatabase";
 import UserModel from "@/lib/models/user";
+import { loginSchema } from "@/lib/schemas/auth";
 import { comparePassword } from "@/lib/utils/passwordUtil";
 import { signToken } from "@/lib/utils/tokenUtil";
 import { NextRequest, NextResponse } from "next/server";
@@ -9,7 +10,13 @@ export const POST = async (req: NextRequest) => {
 		await connectDatabase();
 		const body = await req.json();
 
-		const { email, password } = body;
+		const validation = loginSchema.validate(body);
+		if (validation.error) {
+			const errors = validation.error.details.map((issue) => issue.message);
+			return NextResponse.json({ success: false, error: errors[0] }, { status: 422 });
+		}
+
+		const { email, password } = validation.value;
 		const user = await UserModel.findOne({ email, isDeleted: false, isActive: true }).select("+password");
 		if (!user) {
 			return NextResponse.json({ success: false, error: "User details not found." }, { status: 404 });

@@ -8,7 +8,11 @@ export async function fetchPost(postId: string) {
 }
 
 export async function fetchPosts(params: Record<string, string | number | undefined>) {
-	const query = new URLSearchParams(String(params)).toString();
+	const query = new URLSearchParams(
+		Object.entries(params)
+			.filter(([, value]) => value !== undefined)
+			.map(([key, value]) => [key, String(value)])
+	).toString();
 	const url = `/api/posts?${query}`;
 	const response = await axios.get(url, { withCredentials: true });
 	return response.data;

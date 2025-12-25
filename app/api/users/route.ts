@@ -4,6 +4,7 @@ import connectDatabase from "@/lib/configs/connectDatabase";
 import bcrypt from "bcryptjs";
 import { checkRoleAccess } from "@/lib/middlewares/authMiddleware";
 import { QueryFilter } from "mongoose";
+import userSchema from "@/lib/schemas/user";
 
 export const GET = async (req: NextRequest) => {
 	try {
@@ -72,12 +73,23 @@ export const POST = async (req: NextRequest) => {
 
 		await connectDatabase();
 		const body = await req.json();
+		const validation = userSchema.validate(body);
+		if (validation.error) {
+			const errors = validation.error.details.map((issue) => issue.message);
+			return NextResponse.json({ success: false, error: errors[0] }, { status: 422 });
+		}
+
 		const hashedPassword = await bcrypt.hash(process.env.DEFAULT_PASSWORD as string, 10);
-
 		const randomNo = Math.floor(Math.random() * 9000) + 1000;
-		const username = `${body.fName}.${body.lName}.${randomNo}`;
+		const username = `${validation.value.fName}.${validation.value.lName}.${randomNo}`;
 
-		await UserModel.create({ ...body, password: hashedPassword, username, requiresPasswordChange: true });
+		await UserModel.create({
+			...validation.value,
+			password: hashedPassword,
+			username,
+			requiresPasswordChange: true,
+		});
+
 		return NextResponse.json({ success: true, message: "User details created successfully." }, { status: 201 });
 	} catch (error) {
 		console.error(error);

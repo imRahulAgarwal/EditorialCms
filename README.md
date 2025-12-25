@@ -115,3 +115,14 @@ npm run dev
 -   No permission logic on client
 -   No trust in request payloads
 -   Joi validation on all inputs
+
+---
+
+## Improvements That Can Be Done
+
+-   Central Logging
+-   Rate Limiting
+-   Better Error Handling
+-   100% Responsive UI
+-   Maximum support of WCAG Guidelines
+-   Old Browser Support

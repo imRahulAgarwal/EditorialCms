@@ -8,7 +8,11 @@ export async function fetchUser(userId: string) {
 }
 
 export async function fetchUsers(params: Record<string, string | number | undefined>) {
-	const query = new URLSearchParams(String(params)).toString();
+	const query = new URLSearchParams(
+		Object.entries(params)
+			.filter(([, value]) => value !== undefined)
+			.map(([key, value]) => [key, String(value)])
+	).toString();
 	const url = `/api/users?${query}`;
 	const response = await axios.get(url, { withCredentials: true });
 	return response.data;
@@ -44,6 +48,15 @@ export async function toggleActiveStatusUser(userId: string) {
 export async function deleteUser(userId: string) {
 	const url = `/api/users/${userId}`;
 	const response = await axios.delete(url, {
+		withCredentials: true,
+		headers: { "Content-Type": "application/json" },
+	});
+	return response.data;
+}
+
+export async function resetUserPassword(userId: string) {
+	const url = `/api/users/${userId}/reset-password`;
+	const response = await axios.patch(url, JSON.stringify({}), {
 		withCredentials: true,
 		headers: { "Content-Type": "application/json" },
 	});

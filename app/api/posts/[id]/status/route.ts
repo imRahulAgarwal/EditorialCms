@@ -3,6 +3,7 @@ import connectDatabase from "@/lib/configs/connectDatabase";
 import PostModel from "@/lib/models/post";
 import { TRoute } from "@/types/Route";
 import { checkRoleAccess } from "@/lib/middlewares/authMiddleware";
+import validateObjectId from "@/lib/schemas/objectId";
 
 export const PATCH = async (req: NextRequest, { params }: TRoute) => {
 	try {
@@ -10,6 +11,10 @@ export const PATCH = async (req: NextRequest, { params }: TRoute) => {
 		if (roleGuard) return roleGuard;
 
 		const { id } = await params;
+		if (!id || !validateObjectId(id)) {
+			return NextResponse.json({ success: false, error: "Invalid ID." }, { status: 400 });
+		}
+
 		await connectDatabase();
 		const body = await req.json();
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useDebounce } from "@/hooks/useDebounce";
 import { deletePost, fetchPosts, updatePostStatus } from "@/lib/api/post";
 import { RootState } from "@/store";
 import { flexRender, getCoreRowModel, SortingState, useReactTable } from "@tanstack/react-table";
@@ -15,7 +16,12 @@ type TPost = {
 	createdAt?: Date;
 };
 
-const STATUSES = ["all", "draft", "published", "archived"];
+const STATUSES = [
+	{ key: "all", title: "All" },
+	{ key: "draft", title: "Draft" },
+	{ key: "published", title: "Published" },
+	{ key: "archived", title: "Archived" },
+];
 
 export default function PostsTable() {
 	const role = useSelector((state: RootState) => state.user.user?.role);
@@ -29,6 +35,8 @@ export default function PostsTable() {
 	});
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [search, setSearch] = useState("");
+	const debouncedSearch = useDebounce(search, 400);
+
 	const [statusFilter, setStatusFilter] = useState("all");
 	const [showFilter, setShowFilter] = useState(false);
 
@@ -40,7 +48,7 @@ export default function PostsTable() {
 		fetchPosts({
 			page: pagination.pageIndex + 1,
 			limit: pagination.pageSize,
-			search,
+			search: debouncedSearch,
 			status: statusFilter !== "all" ? statusFilter : undefined,
 			sort: sorting[0]?.id,
 			order: sorting[0]?.desc === true ? "desc" : "asc",
@@ -50,7 +58,7 @@ export default function PostsTable() {
 				setTotalDocuments(res.filteredDocuments ?? 0);
 			}
 		});
-	}, [pagination, sorting, search, statusFilter]);
+	}, [pagination, sorting, debouncedSearch, statusFilter]);
 
 	const table = useReactTable({
 		data,
@@ -89,7 +97,7 @@ export default function PostsTable() {
 						{/* View - everyone */}
 						<Link
 							href={`/posts/${row.original._id}`}
-							className="rounded-md px-3 py-1 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200">
+							className="rounded-xs px-3 py-1 text-sm bg-slate-200 text-slate-700 hover:bg-slate-300">
 							View
 						</Link>
 
@@ -97,7 +105,7 @@ export default function PostsTable() {
 						{(role === "super_admin" || role === "admin" || role === "editor") && (
 							<Link
 								href={`/posts/${row.original._id}/update`}
-								className="rounded-md px-3 py-1 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200">
+								className="rounded-xs px-3 py-1 text-sm bg-slate-300 text-slate-700 hover:bg-slate-400">
 								Update
 							</Link>
 						)}
@@ -109,7 +117,7 @@ export default function PostsTable() {
 									setPostIdToUpdateStatus(row.original._id);
 									setShowUpdateStatusModal(true);
 								}}
-								className="rounded-md px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700">
+								className="rounded-xs px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700">
 								Status
 							</button>
 						)}
@@ -118,7 +126,7 @@ export default function PostsTable() {
 						{role === "super_admin" && (
 							<button
 								onClick={() => deletePost(row.original._id)}
-								className="rounded-md px-3 py-1 text-sm bg-red-600 text-white hover:bg-red-700">
+								className="rounded-xs px-3 py-1 text-sm bg-red-600 text-white hover:bg-red-700">
 								Delete
 							</button>
 						)}
@@ -138,7 +146,7 @@ export default function PostsTable() {
 	if (!role) return null;
 
 	return (
-		<div className="bg-white border border-slate-200 rounded-md p-4">
+		<div className="bg-white border border-slate-200 rounded-xs p-4 h-full">
 			{/* Top controls */}
 			<div className="mb-4 flex flex-wrap gap-3 justify-between items-center">
 				<div className="flex gap-2">
@@ -149,23 +157,23 @@ export default function PostsTable() {
 							setSearch(e.target.value);
 						}}
 						placeholder="Search posts"
-						className="rounded-md border border-slate-200 px-3 py-2 text-sm"
+						className="rounded-xs border border-slate-200 px-3 py-2 text-sm"
 					/>
 
 					<div className="relative">
 						<button
 							onClick={() => setShowFilter((v) => !v)}
-							className="rounded-md px-3 py-2 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200">
+							className="rounded-xs px-3 py-2 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200">
 							Filter
 						</button>
 
 						{showFilter && (
-							<div className="absolute z-10 mt-2 w-40 rounded-md border border-slate-200 bg-white shadow-sm">
-								{STATUSES.map((s) => (
+							<div className="absolute z-10 mt-2 w-40 rounded-xs border border-slate-200 bg-white shadow-sm">
+								{STATUSES.map((status) => (
 									<button
-										key={s}
+										key={status.key}
 										onClick={() => {
-											setStatusFilter(s);
+											setStatusFilter(status.key);
 											setPagination({
 												...pagination,
 												pageIndex: 0,
@@ -173,7 +181,7 @@ export default function PostsTable() {
 											setShowFilter(false);
 										}}
 										className="block w-full text-left px-3 py-2 text-sm hover:bg-slate-50">
-										{s}
+										{status.title}
 									</button>
 								))}
 							</div>
@@ -184,7 +192,7 @@ export default function PostsTable() {
 				{role !== "viewer" && (
 					<Link
 						href="/posts/new"
-						className="rounded-md px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700">
+						className="rounded-xs px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700">
 						Add New Post
 					</Link>
 				)}
@@ -242,13 +250,13 @@ export default function PostsTable() {
 									<button
 										onClick={() => table.previousPage()}
 										disabled={!table.getCanPreviousPage()}
-										className="rounded-md px-3 py-1 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-50">
+										className="rounded-xs px-3 py-1 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-50">
 										Prev
 									</button>
 									<button
 										onClick={() => table.nextPage()}
 										disabled={!table.getCanNextPage()}
-										className="rounded-md px-3 py-1 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-50">
+										className="rounded-xs px-3 py-1 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-50">
 										Next
 									</button>
 								</div>
@@ -263,7 +271,7 @@ export default function PostsTable() {
 				<>
 					<div className="fixed inset-0 bg-black/40" />
 					<div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-						<div className="w-full max-w-md rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+						<div className="w-full max-w-md rounded-xs border border-slate-200 bg-white p-5 shadow-sm">
 							<form
 								onSubmit={(e) => {
 									e.preventDefault();
@@ -275,7 +283,7 @@ export default function PostsTable() {
 								<select
 									value={updateStatus}
 									onChange={(e) => setUpdateStatus(e.target.value)}
-									className="h-9 rounded-md border border-slate-200 px-2 text-sm">
+									className="h-9 rounded-xs border border-slate-200 px-2 text-sm">
 									<option value="draft">Draft</option>
 									<option value="published">Published</option>
 									<option value="archived">Archived</option>
@@ -285,12 +293,12 @@ export default function PostsTable() {
 									<button
 										type="button"
 										onClick={() => setShowUpdateStatusModal(false)}
-										className="rounded-md px-4 py-2 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200">
+										className="rounded-xs px-4 py-2 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200">
 										Close
 									</button>
 									<button
 										type="submit"
-										className="rounded-md px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700">
+										className="rounded-xs px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700">
 										Save
 									</button>
 								</div>

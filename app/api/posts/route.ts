@@ -1,5 +1,6 @@
 import connectDatabase from "@/lib/configs/connectDatabase";
 import PostModel from "@/lib/models/post";
+import { postSchema } from "@/lib/schemas/post";
 import sanitizeHtmlUtil from "@/lib/utils/sanitizeHtmlUtil";
 import { QueryFilter } from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
@@ -58,10 +59,15 @@ export const POST = async (req: NextRequest) => {
 	try {
 		await connectDatabase();
 		const body = await req.json();
+		const validation = postSchema.validate(body);
+		if (validation.error) {
+			const errors = validation.error.details.map((issue) => issue.message);
+			return NextResponse.json({ success: false, error: errors[0] }, { status: 422 });
+		}
 
-		const sanititzedHtml = sanitizeHtmlUtil(body.htmlContent);
+		const sanititzedHtml = sanitizeHtmlUtil(validation.value.htmlContent);
 
-		await PostModel.create({ ...body, htmlContent: sanititzedHtml });
+		await PostModel.create({ ...validation.value, htmlContent: sanititzedHtml });
 		return NextResponse.json({ success: true, message: "Post created successfully." }, { status: 201 });
 	} catch (error) {
 		console.error(error);
